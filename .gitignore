@@ -1,0 +1,13 @@
+# .gitignore
+
+# 依存ライブラリ（重すぎるので上げない）
+node_modules/
+__pycache__/
+venv/
+.env
+
+# OSのシステムファイル
+.DS_Store
+
+# Next.jsのビルドファイル
+.next/
