@@ -29,6 +29,7 @@ model = genai.GenerativeModel("gemini-2.0-flash")
 
 class ChatRequest(BaseModel):
     message: str
+    style: str
 
 # 3. APIエンドポイント
 # 3. APIエンドポイント
