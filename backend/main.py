@@ -33,13 +33,14 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest):
     try:
-        # プロンプト（変更なし）
+        # プロンプト
         system_prompt = f"""
         あなたは三ツ星レストランのシェフです。
         ユーザーの食材：{req.message}
         希望ジャンル：{req.style}
 
         以下の情報をJSON形式で出力してください。
+        配列（[]）ではなく、単一のオブジェクト（{{}}）で返してください。
         キー名は必ず以下のようにしてください：
         - "content": レシピの本文（タイトル、材料、手順、コツ、Amazonリンクの案内まで含める）
         - "ingredients": この料理に必要な【すべての材料と調味料】のリスト（ユーザーが入力していないものも含む）
@@ -55,12 +56,11 @@ async def chat_endpoint(req: ChatRequest):
         
         # JSON読み込み
         response_data = json.loads(clean_text)
-
-        # ★★★ ここが修正ポイント！ ★★★
-        # もしAIがリスト（[...]）で返してきたら、最初の中身を取り出す
+        
+        # ★★★ ここが一番大事！リスト対策 ★★★
         if isinstance(response_data, list):
             response_data = response_data[0]
-        
+            
         return {
             "reply": response_data["content"],
             "ingredients": response_data["ingredients"]
@@ -72,4 +72,4 @@ async def chat_endpoint(req: ChatRequest):
             print(f"Raw AI response: {response.text}")
         except:
             pass
-        return {"reply": "エラーが発生しました。もう一度試してください。", "ingredients": []}
+        return {"reply": "エラーが発生しました。もう一度ボタンを押してみてください。", "ingredients": []}
