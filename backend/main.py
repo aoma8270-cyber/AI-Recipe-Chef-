@@ -1,4 +1,5 @@
 # backend/main.py
+import json
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,9 +24,12 @@ import os
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") 
 
 genai.configure(api_key=GEMINI_API_KEY)
-# モデルの準備 (gemini-1.5-flash は高速で無料枠も大きい)
-# 最後に "-latest" をつけてみる
-model = genai.GenerativeModel("gemini-2.0-flash")
+
+# generation_config を追加して JSONモードにする
+model = genai.GenerativeModel(
+    "gemini-2.0-flash",
+    generation_config={"response_mime_type": "application/json"}
+)
 
 class ChatRequest(BaseModel):
     message: str
@@ -36,26 +40,32 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest):
     try:
-       # ▼▼▼ プロンプトをアフィリエイト仕様に変更 ▼▼▼
+        # プロンプト：JSON形式で返すように厳格に指定
         system_prompt = f"""
         あなたは三ツ星レストランのシェフです。
-        ユーザーが持っている食材：【 {req.message} 】
-        希望する料理のジャンル：【 {req.style} 】
+        ユーザーの食材：{req.message}
+        希望ジャンル：{req.style}
 
-        上記をもとに、最適なレシピを1つ提案してください。
-        材料と手順を明確にし、美味しく作るコツをアドバイスしてください。
+        以下の情報をJSON形式で出力してください。
+        キー名は必ず以下のようにしてください：
+        - "content": レシピの本文（タイトル、材料、手順、コツ、Amazonリンクの案内まで含める）
+        - "ingredients": この料理に必要な【すべての材料と調味料】のリスト（ユーザーが入力していないものも含む）
 
-        ■最後に
-        この料理を作るのに「あると便利な調理器具」または「こだわると美味しい食材」を1つだけピックアップし、
-        「おすすめアイテム: [アイテム名]」と出力した後に、
-        そのアイテムの Amazon検索URL (https://www.amazon.co.jp/s?k=[アイテム名]&tag=recipechef01-22) を表示してください。
+        レシピ本文の最後には、前回同様に調理器具のAmazonリンク案内も含めてください。
         """
-        # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         response = model.generate_content(system_prompt)
         
-        return {"reply": response.text}
+        # AIからの返事（JSON文字列）をPythonの辞書データに変換
+        response_data = json.loads(response.text)
+        
+        # フロントエンドに返す（本文と、材料リストを別々に送る）
+        return {
+            "reply": response_data["content"],
+            "ingredients": response_data["ingredients"]
+        }
     
     except Exception as e:
         print(f"Error: {e}")
-        return {"reply": "エラーが発生しました。コンソールを確認してください。"}
+        # エラー時は空のリストを返す
+        return {"reply": "エラーが発生しました。", "ingredients": []}

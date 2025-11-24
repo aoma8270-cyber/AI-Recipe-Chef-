@@ -16,6 +16,7 @@ export default function Home() {
   const [style, setStyle] = useState("おまかせ");
   const [reply, setReply] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [suggestedIngredients, setSuggestedIngredients] = useState<string[]>([]);
   
   // 保存したレシピを入れるリスト（文字列ではなく、オブジェクトの配列にする）
   const [savedRecipes, setSavedRecipes] = useState<SavedRecipe[]>([]);
@@ -40,6 +41,9 @@ export default function Home() {
       });
       const data = await response.json();
       setReply(data.reply);
+
+      setSuggestedIngredients(data.ingredients || []);
+
     } catch (error) {
       console.error(error);
       setReply("エラーが発生しました。");
@@ -136,16 +140,35 @@ export default function Home() {
               <span>このレシピを保存する</span>
               <span className="text-xl">📝</span>
             </button>
-            {/* ▼▼▼ (追加) Amazonアフィリエイト誘導ボタン ▼▼▼ */}
-            <a
-              href={`https://www.amazon.co.jp/s?k=${encodeURIComponent(input)}&tag=recipechef01-22`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 block w-full bg-yellow-400 text-black p-3 rounded-lg font-bold text-center hover:bg-yellow-500 transition shadow-sm border-b-4 border-yellow-600 active:border-b-0 active:translate-y-1"
-            >
-              Amazonで「{input.length > 10 ? "食材" : input}」を探す 🛒
-            </a>
-            {/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */}
+           {/* ▼▼▼ (新) AIが提案した全材料のAmazonボタン ▼▼▼ */}
+            {reply && suggestedIngredients.length > 0 && (
+              <div className="mt-8 p-5 bg-yellow-50 rounded-xl border border-yellow-200">
+                <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                  <span>🛒</span>
+                  <span>必要な材料・調味料をAmazonで揃える</span>
+                </h3>
+                
+                <div className="flex flex-wrap gap-2">
+                  {suggestedIngredients.map((item, index) => (
+                    <a
+                      key={index}
+                      // あなたのID (recipechef01-22) が入っています
+                      href={`https://www.amazon.co.jp/s?k=${encodeURIComponent(item)}&tag=recipechef01-22`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white text-gray-800 px-3 py-2 rounded-lg text-xs font-bold hover:bg-yellow-400 hover:text-black hover:border-yellow-500 transition shadow-sm border border-gray-300 flex items-center gap-1"
+                    >
+                      {item} ↗
+                    </a>
+                  ))}
+                </div>
+                
+                <p className="text-xs text-gray-500 mt-3 text-right">
+                  ※Amazonアソシエイト・プログラムを利用しています
+                </p>
+              </div>
+            )}
+            {/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */}
           </div>
         )}
 
