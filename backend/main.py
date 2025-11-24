@@ -33,7 +33,7 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest):
     try:
-        # プロンプト
+        # プロンプト（変更なし）
         system_prompt = f"""
         あなたは三ツ星レストランのシェフです。
         ユーザーの食材：{req.message}
@@ -50,11 +50,16 @@ async def chat_endpoint(req: ChatRequest):
 
         response = model.generate_content(system_prompt)
         
-        # ★★★ ここが修正ポイント（クリーニング処理） ★★★
+        # クリーニング処理
         clean_text = response.text.replace("```json", "").replace("```", "").strip()
         
-        # きれいになったテキストを読み込む
+        # JSON読み込み
         response_data = json.loads(clean_text)
+
+        # ★★★ ここが修正ポイント！ ★★★
+        # もしAIがリスト（[...]）で返してきたら、最初の中身を取り出す
+        if isinstance(response_data, list):
+            response_data = response_data[0]
         
         return {
             "reply": response_data["content"],
@@ -62,12 +67,9 @@ async def chat_endpoint(req: ChatRequest):
         }
     
     except Exception as e:
-        # エラーが起きたら、ログに詳細を出す
         print(f"Error detail: {e}")
-        # AIの生の返答もログに出して確認できるようにする
         try:
             print(f"Raw AI response: {response.text}")
         except:
             pass
-            
-        return {"reply": "エラーが発生しました。しばらく待ってから再試行してください。", "ingredients": []}
+        return {"reply": "エラーが発生しました。もう一度試してください。", "ingredients": []}
