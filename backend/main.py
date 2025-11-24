@@ -17,9 +17,12 @@ app.add_middleware(
 
 # 2. Geminiの設定
 # ↓↓↓ ここにあなたのAPIキーを入れてください ↓↓↓
-GEMINI_API_KEY = "YOUR_API_KEY_HERE"
-genai.configure(api_key=GEMINI_API_KEY)
+import os  
 
+# Renderの設定画面に入力した「GEMINI_API_KEY」という値を読み込む
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") 
+
+genai.configure(api_key=GEMINI_API_KEY)
 # モデルの準備 (gemini-1.5-flash は高速で無料枠も大きい)
 # 最後に "-latest" をつけてみる
 model = genai.GenerativeModel("gemini-2.0-flash")
