@@ -136,6 +136,16 @@ export default function Home() {
               <span>このレシピを保存する</span>
               <span className="text-xl">📝</span>
             </button>
+            {/* ▼▼▼ (追加) Amazonアフィリエイト誘導ボタン ▼▼▼ */}
+            <a
+              href={`https://www.amazon.co.jp/s?k=${encodeURIComponent(input)}&tag=recipechef01-22`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 block w-full bg-yellow-400 text-black p-3 rounded-lg font-bold text-center hover:bg-yellow-500 transition shadow-sm border-b-4 border-yellow-600 active:border-b-0 active:translate-y-1"
+            >
+              Amazonで「{input.length > 10 ? "食材" : input}」を探す 🛒
+            </a>
+            {/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */}
           </div>
         )}
 
